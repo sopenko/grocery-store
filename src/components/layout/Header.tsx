@@ -12,12 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Home, Grid3X3, Newspaper, Calendar, Store, User, LogOut, Menu, X } from 'lucide-react'
+import { Home, Grid3X3, Newspaper, Calendar, Store, User, LogOut, Menu, X, Map } from 'lucide-react'
 import { useState } from 'react'
 
 const navLinks = [
   { name: 'Inicio', href: '/', icon: Home },
   { name: 'Aplicaciones', href: '/apps', icon: Grid3X3 },
+  { name: 'Mapa', href: '/map', icon: Map },
   { name: 'Noticias', href: '/news', icon: Newspaper },
   { name: 'Eventos', href: '/events', icon: Calendar },
   { name: 'Directorio', href: '/directory', icon: Store },
