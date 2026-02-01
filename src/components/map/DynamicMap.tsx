@@ -82,7 +82,7 @@ function MapController({ center, zoom }: { center: [number, number]; zoom: numbe
 }
 
 export default function DynamicMap({
-  center = [19.5126, -101.7078], // Default to Pátzcuaro, Michoacán
+  center = [19.6792, -101.6117], // Default to San Jerónimo Purenchécuaro, Michoacán
   zoom = 13,
   points = [],
   polygons = [],
