@@ -639,7 +639,7 @@ export default function AdminPOIsPage() {
 
       {/* Reject Modal */}
       {showRejectModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
           <Card className="w-full max-w-md">
             <CardHeader>
               <CardTitle>Rechazar Punto de Interés</CardTitle>
