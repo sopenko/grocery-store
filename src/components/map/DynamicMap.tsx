@@ -92,6 +92,7 @@ interface DynamicMapProps {
   polygons?: MapPolygon[]
   onPointClick?: (point: MapPoint) => void
   onPolygonClick?: (polygon: MapPolygon) => void
+  onMapClick?: (latlng: { lat: number; lng: number }) => void
   className?: string
 }
 
@@ -102,6 +103,27 @@ function MapController({ center, zoom }: { center: [number, number]; zoom: numbe
   useEffect(() => {
     map.setView(center, zoom)
   }, [map, center, zoom])
+
+  return null
+}
+
+// Component to handle map clicks
+function MapClickHandler({ onMapClick }: { onMapClick?: (latlng: { lat: number; lng: number }) => void }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (!onMapClick) return
+
+    const handleClick = (e: L.LeafletMouseEvent) => {
+      onMapClick({ lat: e.latlng.lat, lng: e.latlng.lng })
+    }
+
+    map.on('click', handleClick)
+
+    return () => {
+      map.off('click', handleClick)
+    }
+  }, [map, onMapClick])
 
   return null
 }
@@ -689,6 +711,7 @@ export default function DynamicMap({
   polygons = [],
   onPointClick,
   onPolygonClick,
+  onMapClick,
   className = '',
 }: DynamicMapProps) {
   const [isMounted, setIsMounted] = useState(false)
@@ -732,6 +755,15 @@ export default function DynamicMap({
         .leaflet-control-attribution {
           font-size: 10px !important;
         }
+        .leaflet-container {
+          z-index: 1 !important;
+        }
+        .leaflet-pane {
+          z-index: 1 !important;
+        }
+        .leaflet-top, .leaflet-bottom {
+          z-index: 100 !important;
+        }
       `}</style>
       <MapContainer
         center={center}
@@ -742,6 +774,7 @@ export default function DynamicMap({
         doubleClickZoom={false}
       >
         <MapController center={center} zoom={zoom} />
+        {onMapClick && <MapClickHandler onMapClick={onMapClick} />}
         <ZoomControl position="topright" />
         <ScaleControl position="bottomleft" imperial={false} />
 
