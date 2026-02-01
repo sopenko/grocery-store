@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/useAuth'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Map, Store, Calendar, MapPin, Layers, ChevronRight } from 'lucide-react'
+import { Map, Store, Calendar, MapPin, Layers, Plus, Settings } from 'lucide-react'
+import { SubmitPOIModal } from '@/components/map/SubmitPOIModal'
 import type { MapPoint, MapPolygon } from '@/components/map/DynamicMap'
 
 // Dynamic import for map component (client-side only)
@@ -29,10 +32,12 @@ interface LayerToggle {
 }
 
 export default function MapPage() {
+  const { user, profile } = useAuth()
   const [points, setPoints] = useState<MapPoint[]>([])
   const [polygons, setPolygons] = useState<MapPolygon[]>([])
   const [selectedItem, setSelectedItem] = useState<MapPoint | MapPolygon | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showSubmitModal, setShowSubmitModal] = useState(false)
   const [layers, setLayers] = useState<LayerToggle[]>([
     { id: 'businesses', name: 'Negocios', icon: <Store className="w-4 h-4" />, color: '#f59e0b', enabled: true },
     { id: 'events', name: 'Eventos', icon: <Calendar className="w-4 h-4" />, color: '#8b5cf6', enabled: true },
@@ -102,11 +107,12 @@ export default function MapPage() {
       }
     }
 
-    // Load points of interest
+    // Load points of interest (only approved ones)
     if (layers.find((l) => l.id === 'pois')?.enabled) {
       const { data: pois } = await supabase
         .from('points_of_interest')
         .select('id, name, description, category, latitude, longitude, address')
+        .eq('status', 'approved')
         .eq('is_active', true)
 
       if (pois) {
@@ -184,18 +190,37 @@ export default function MapPage() {
       <main className="flex-1">
         <div className="container mx-auto px-4 py-8">
           {/* Page Header */}
-          <div className="mb-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
-                <Map className="w-5 h-5 text-white" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
+                  <Map className="w-5 h-5 text-white" />
+                </div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  Mapa de la Comunidad
+                </h1>
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Mapa de la Comunidad
-              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Explora negocios, eventos, sitios culturales y terrenos de la comunidad.
+              </p>
             </div>
-            <p className="text-gray-600 dark:text-gray-400">
-              Explora negocios, eventos, sitios culturales y terrenos de la comunidad.
-            </p>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setShowSubmitModal(true)}
+                className="bg-green-500 hover:bg-green-600"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Sugerir Punto
+              </Button>
+              {(profile?.role === 'admin' || profile?.role === 'moderator') && (
+                <Button variant="outline" asChild>
+                  <Link href="/admin/pois">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Administrar
+                  </Link>
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="grid lg:grid-cols-4 gap-6">
@@ -293,6 +318,20 @@ export default function MapPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* User Submissions Link */}
+              {user && (
+                <Card>
+                  <CardContent className="pt-6">
+                    <Button variant="outline" className="w-full" asChild>
+                      <Link href="/map/submissions">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        Mis Sugerencias
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Map */}
@@ -327,6 +366,15 @@ export default function MapPage() {
           </div>
         </div>
       </main>
+
+      {/* Submit POI Modal */}
+      <SubmitPOIModal
+        isOpen={showSubmitModal}
+        onClose={() => {
+          setShowSubmitModal(false)
+          loadMapData() // Refresh data after submission
+        }}
+      />
 
       <Footer />
     </div>
